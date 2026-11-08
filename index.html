@@ -20,6 +20,10 @@
             gap: 10px;
         }
 
+        .hidden {
+            display: none !important;
+        }
+
         main {
             flex-grow: 1;
             overflow-y: auto;
@@ -89,7 +93,7 @@
                     }
                 }
 
-                > div:last-child {
+                .task_add {
                     padding-left: 15px;
                     display: flex;
 
@@ -110,6 +114,15 @@
                         vertical-align: middle;
                         font-size: 15px;
                     }
+                }
+
+                .collapsed {
+                    background-color: lightcyan;
+                    width: 50%;
+                    margin: auto;
+                    border-radius: 15px;
+                    border: 2px solid grey;
+                    height: 10px;
                 }
             }
         }
@@ -187,6 +200,7 @@
 
         const task_add_el = document.createElement("div");
         room_el.appendChild(task_add_el);
+        task_add_el.classList.add("task_add");
 
         const task_add_text_el = document.createElement("input");
         task_add_el.appendChild(task_add_text_el);
@@ -200,10 +214,21 @@
         const task_add_button_el = document.createElement("button");
         task_add_el.appendChild(task_add_button_el);
         task_add_button_el.textContent = "+";
-        task_add_button_el.onclick = () => {
+        task_add_button_el.addEventListener("click", (event) => {
             addTask(room_el, task_add_text_el.value);
             task_add_text_el.value = "";
-        }
+        });
+
+        const collapsed_el = document.createElement("p");
+        room_el.appendChild(collapsed_el);
+        collapsed_el.classList.add("collapsed");
+        collapsed_el.classList.add("hidden");
+
+        room_name_el.addEventListener("click", (event) => {
+            tasks_el.classList.toggle("hidden");
+            task_add_el.classList.toggle("hidden");
+            collapsed_el.classList.toggle("hidden");
+        })
 
         save();
 
@@ -231,10 +256,10 @@
         const task_delete_el = document.createElement("button");
         task_el.appendChild(task_delete_el);
         task_delete_el.textContent = "-";
-        task_delete_el.onclick = () => {
+        task_delete_el.addEventListener("click", (event) => {
             task_el.remove();
             save();
-        };
+        });
 
         save();
     }
