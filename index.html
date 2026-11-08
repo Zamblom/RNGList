@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RNGList</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+        }
+
+        body {
+            width: 100dwv;
+            height: 100dvh;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        main {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            counter-reset: room;
+
+            .room {
+                counter-increment: room;
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                gap: 2px;
+                font-weight: bold;
+
+                div:first-child {
+                    display: flex;
+                
+                    > p::before {                
+                        content: counter(room) ": ";
+                    }
+                }
+
+                p {
+                    background-color: lightblue;
+                    flex-grow: 1;
+                    margin: 0;
+                    border: 2px solid grey;
+                    font-size: 25px;
+                    border-radius: 15px 0 0 15px;
+                    border-right: none;
+                    line-height: 36px;
+                    height: 40px;
+                    padding: 0 15px 0 15px;
+                }
+
+                button {
+                    height: 40px;
+                    aspect-ratio: 1;
+                    border-radius: 0 15px 15px 0;
+                    vertical-align: middle;
+                    font-size: 18px;
+                }
+
+                .tasks {
+                    counter-reset: task;
+                    display: flex;
+                    flex-direction: column;
+                    padding-left: 15px;
+                    gap: 2px;
+                    
+                    > div {
+                        counter-increment: task;
+                        display: flex;
+
+                        > p {
+                            border-radius: 15px 0 0 15px;
+                            background-color: lightcyan;
+                            font-size: 16px;
+                            border-right: none;
+                        }
+
+                        > p::before {
+                            content: counter(task) ") ";
+                        }
+                    }
+                }
+
+                > div:last-child {
+                    padding-left: 15px;
+                    display: flex;
+
+                    input {
+                        background-color: lightgreen;
+                        flex-grow: 1;
+                        border-radius: 15px 0 0 15px;
+                        border-right: none;
+                        padding-left: 15px;
+                        font-size: 15px;
+                        font-weight: bold;
+                    }
+
+                    button {
+                        height: 40px;
+                        aspect-ratio: 1;
+                        border-radius: 0 15px 15px 0;
+                        vertical-align: middle;
+                        font-size: 15px;
+                    }
+                }
+            }
+        }
+
+        aside {
+            display: flex;
+
+            input {
+                background-color: lightpink;
+                flex-grow: 1;
+                border-radius: 15px 0 0 15px;
+                border-right: none;
+                padding-left: 15px;
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            button {
+                height: 40px;
+                aspect-ratio: 1;
+                border-radius: 0 15px 15px 0;
+                vertical-align: middle;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+    </main>
+    <aside>
+        <input type="text" name="room" id="room-name" placeholder="New Room" onkeyup="addRoomMaybe(event, this)"><button onclick="addRoomFrom(document.querySelector('#room-name'))">+</button>
+    </aside>
+</body>
+<script>
+    const room_template = document.querySelector("#room");
+
+    window.addEventListener("load", load);
+
+    function addRoomMaybe(event, input_el) {
+        if (event.key !== "Enter") return;
+        addRoomFrom(input_el);
+    }
+
+    function addRoomFrom(input_el) {
+        addRoom(input_el.value);
+        input_el.value = "";
+    }
+
+    function addRoom(room_name) {
+        if (room_name === "") return;
+        
+        const room_el = document.createElement("div");
+        document.querySelector("main").appendChild(room_el);
+        room_el.classList.add("room")
+
+        const room_name_el = document.createElement("div");
+        room_el.appendChild(room_name_el);
+
+        const room_name_text_el = document.createElement("p");
+        room_name_el.appendChild(room_name_text_el);
+        room_name_text_el.textContent = room_name
+
+        const room_delete_el = document.createElement("button");
+        room_name_el.appendChild(room_delete_el);
+        room_delete_el.textContent = "-";
+        room_delete_el.onclick = () => {
+            room_el.remove();
+            save();
+        };
+
+        const tasks_el = document.createElement("div");
+        room_el.appendChild(tasks_el);
+        tasks_el.classList.add("tasks");
+
+        const task_add_el = document.createElement("div");
+        room_el.appendChild(task_add_el);
+
+        const task_add_text_el = document.createElement("input");
+        task_add_el.appendChild(task_add_text_el);
+        task_add_text_el.type = "text";
+        task_add_text_el.name = "task";
+        task_add_text_el.placeholder = "New Task";
+        task_add_text_el.addEventListener("keyup", (event) => {
+            if (addTaskMaybe(event, room_el, task_add_text_el.value)) task_add_text_el.value = "";;
+        });
+
+        const task_add_button_el = document.createElement("button");
+        task_add_el.appendChild(task_add_button_el);
+        task_add_button_el.textContent = "+";
+        task_add_button_el.onclick = () => {
+            addTask(room_el, task_add_text_el.value);
+            task_add_text_el.value = "";
+        }
+
+        save();
+
+        return room_el;
+    }
+    
+    function addTaskMaybe(event, room, task_name) {
+        if (event.key !== "Enter") return false;
+        addTask(room, task_name);
+        return true;
+    }
+
+    function addTask(room, task_name) {
+        if (task_name === "") return;
+        const tasks_el = room.querySelector(".tasks");
+
+        const task_el = document.createElement("div");
+        tasks_el.appendChild(task_el);
+        task_el.classList.add("task");
+
+        const task_text_el = document.createElement("p");
+        task_el.appendChild(task_text_el);
+        task_text_el.textContent = task_name;
+        
+        const task_delete_el = document.createElement("button");
+        task_el.appendChild(task_delete_el);
+        task_delete_el.textContent = "-";
+        task_delete_el.onclick = () => {
+            task_el.remove();
+            save();
+        };
+
+        save();
+    }
+
+    function save() {
+        let data = {};
+
+        [...document.querySelectorAll(".room")].forEach(room => {
+            const room_name = room.querySelector("p").innerText;
+            if (!(room_name in data)) data[room_name] = [];
+            [...room.querySelectorAll(".task")].forEach(task => {
+                const task_name = task.querySelector("p").innerText;
+                data[room_name].push(task_name);
+            })
+        });
+
+        localStorage.setItem("data", JSON.stringify(data));
+    }
+
+    function load() {
+        const data_string = localStorage.getItem("data")
+        if (data_string == null) return;
+
+        [...document.querySelector("main").children].forEach(child => {child.remove()});
+        
+        const data = JSON.parse(data_string);
+        for (const room_name in data) {
+            const room = addRoom(room_name)
+            for (const task of data[room_name]) addTask(room, task);
+        }
+    }
+</script>
+</html>
