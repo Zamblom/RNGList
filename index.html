@@ -133,7 +133,7 @@
             input {
                 background-color: lightpink;
                 flex-grow: 1;
-                border-radius: 15px 0 0 15px;
+                border-left: none;
                 border-right: none;
                 padding-left: 15px;
                 font-size: 18px;
@@ -147,6 +147,10 @@
                 vertical-align: middle;
                 font-size: 18px;
             }
+
+            #undo {
+                border-radius: 15px 0 0 15px;
+            }
         }
     </style>
 </head>
@@ -154,11 +158,14 @@
     <main>
     </main>
     <aside>
-        <input type="text" name="room" id="room-name" placeholder="New Room" onkeyup="addRoomMaybe(event, this)"><button onclick="addRoomFrom(document.querySelector('#room-name'))">+</button>
+        <button onclick="undo()" id="undo">&lt;</button>
+        <input type="text" name="room" id="room-name" placeholder="New Room" onkeyup="addRoomMaybe(event, this)">
+        <button onclick="addRoomFrom(document.querySelector('#room-name'))">+</button>
     </aside>
 </body>
 <script>
     const room_template = document.querySelector("#room");
+    let saves = [];
 
     window.addEventListener("load", load);
 
@@ -277,6 +284,7 @@
         });
 
         localStorage.setItem("data", JSON.stringify(data));
+        saves.push(data);
     }
 
     function load() {
@@ -290,6 +298,25 @@
             const room = addRoom(room_name)
             for (const task of data[room_name]) addTask(room, task);
         }
+    }
+
+    function undo() {
+        save();
+        const current = saves.pop();
+
+        console.log("Undo");
+        const maybe_data = saves.pop();
+        const data = JSON.stringify(maybe_data) === JSON.stringify(current) ? saves.pop() : maybe_data;
+
+        const saves_copy = saves.slice();
+        if (data === undefined) return;
+        [...document.querySelector("main").children].forEach(child => {child.remove()});
+        for (const room_name in data) {
+            const room = addRoom(room_name)
+            for (const task of data[room_name]) addTask(room, task);
+        }
+        saves = saves_copy;
+        save();
     }
 </script>
 </html>
